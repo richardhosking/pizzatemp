@@ -4,6 +4,6 @@
  */
 
 
-#define SECRET_SSID "AndroidAP"
-#define SECRET_PASS "Yederrh55"
+#define SECRET_SSID "iiNet72B50B"
+#define SECRET_PASS "88DE5CF80A"
 

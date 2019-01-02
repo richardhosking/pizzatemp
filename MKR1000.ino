@@ -1,4 +1,13 @@
 /*
+  
+  Temperature monitoring application
+  Richard Hosking Dec 2018
+  Temp measured using platinum resistor sensor
+  Temp => ohms => oscillator frequency
+  converted to deg C and displayed via simple local webserver 
+  
+  using 
+  
   WiFi Web Server
 
  A simple web server that shows the value of the analog input pins.
@@ -7,11 +16,7 @@
  This example is written for a network using WPA encryption. For
  WEP or WPA, change the WiFi.begin() call accordingly.
 
- Circuit:
- * WiFi shield attached
- * Analog inputs attached to pins A0 through A5 (optional)
-
- created 13 July 2010
+  created 13 July 2010
  by dlf (Metodo2 srl)
  modified 31 May 2012
  by Tom Igoe
@@ -22,36 +27,30 @@
 #include <WiFi101.h>
 
 #include "arduino_secrets.h" 	// sensitive data in the Secret tab/arduino_secrets.h
+#include "pizzatemp.h" 		// Helper files 
+
 char ssid[] = SECRET_SSID;      // your network SSID (name)
 char pass[] = SECRET_PASS;    	// your network password (use for WPA, or use as key for WEP)
 int keyIndex = 0;               // your network key Index number (needed only for WEP)
 
-int temp_offset = 1061;  // freq in Hz at 0 deg C
-float temp_ratio = 0.3977;  // Decrease in freq Hz per deg C increase in temp 
+Pizzatemp helper; //Need to declare an instance of class to use helpers 
 
-int counter=0; // pulse counter to determine frequency
-unsigned long start_milliseconds, current_milliseconds; // for interval timer
-const unsigned long period = 1000; // interval for counting frequency - 1 second 
 
 // Wifi stuff
 int status = WL_IDLE_STATUS;
 WiFiServer server(80);
 
+//#include "pizzatemp.cpp" // Project specific routines
+
 void setup() {
   //Initialize serial and wait for port to open:
   Serial.begin(9600);
   while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+     // wait for serial port to connect. Needed for native USB port only
   }
   
-  // Code to setup counter interrupt
-  // Pin 0 interrupt priority 0 ie highest
-  pinMode(0,INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(0), increment_counter, RISING);
-  
-  // Test Oscillator
-  pinMode(1, OUTPUT);
-  
+     helper.initialize_interrupt();
+     
   // check for the presence of the shield:
   if (WiFi.status() == WL_NO_SHIELD) {
     Serial.println("WiFi shield not present");
@@ -71,7 +70,7 @@ void setup() {
   }
   server.begin();
   // you're connected now, so print out the status:
-  printWiFiStatus();
+  helper.printWiFiStatus();
 }
 // wait 1 second
 
@@ -98,18 +97,9 @@ void loop() {
           client.println();
           client.println("<!DOCTYPE HTML>");
           client.println("<html>");
-          // output the value of each analog input pin
-          /*for (int analogChannel = 0; analogChannel < 6; analogChannel++) {
-            int sensorReading = analogRead(analogChannel);
-            client.print("analog input ");
-            client.print(analogChannel);
-            client.print(" is ");
-            client.print(sensorReading);
-            client.println("<br />");
-          }
-          */
+
 	  client.print("Current Oven temperature is : ");
-	  int sensorReading = measure_temp();
+	  int sensorReading = helper.measure_temp();
 	  client.print(sensorReading);
 	  client.println("<br />");
           client.println("</html>");
@@ -136,72 +126,3 @@ void loop() {
 }
 
 
-void printWiFiStatus() {
-  // print the SSID of the network you're attached to:
-  Serial.print("SSID: ");
-  Serial.println(WiFi.SSID());
-
-  // print your WiFi shield's IP address:
-  IPAddress ip = WiFi.localIP();
-  Serial.print("IP Address: ");
-  Serial.println(ip);
-
-  // print the received signal strength:
-  long rssi = WiFi.RSSI();
-  Serial.print("signal strength (RSSI):");
-  Serial.print(rssi);
-  Serial.println(" dBm");
-}
-
-int measure_temp(){
-/* this routine measures the current temp of the probe 
- * Temp change is approx 0.375 Ohms per degree C increase 1000 ohms at 0 deg C 
- * which translates to a freq decrease of approx 0.3977 Hz per Deg C increase
- * Pseudocode
- * Count output freq of relaxation oscillator over a timed period
- * Calculate temp T where
- * T = (temp_offset - count) /temp_ratio
- * convert to int and return
- */
-float temp;
-int count, result;
-
-//clear counter
-counter=0;
-start_milliseconds = millis(); //get current time 
-current_milliseconds = millis();
-
-// delay of 1 sec - pulses counted by interrupt service routine increment_counter
-while(current_milliseconds - start_milliseconds <= period){
-  current_milliseconds = millis(); 
-    unsigned long start_micros = micros();
-    unsigned long current_micros = micros();
-    unsigned long delay = 55000;
-    
-  // Test oscillator approx 1KHz on pin1 
-  for(int i = 0; i<=100; i++){
-     while(current_micros - start_micros <=delay){
-      current_micros = micros();// Wait 500us
-    }
-      //Toggle the pin 
-    digitalWrite(1, !digitalRead(1));
-    unsigned long start_micros = micros();
-    unsigned long current_micros = micros();
-  }
-    
-}
-count = counter;
-
-// Calculate temp from freq counter
-temp = (temp_offset - count)/temp_ratio;
-result = (int)temp;
-
-return result;
-
-}
-
-// Interrupt service routine for counter
-
-void increment_counter(){
-  counter++;
-}
