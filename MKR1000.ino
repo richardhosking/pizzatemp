@@ -1,7 +1,9 @@
 /*
   
   Temperature monitoring application
-  Richard Hosking Dec 2018
+  Richard Hosking Feb 2019
+  richardh@iinet.net.au
+  
   Temp measured using platinum resistor sensor
   Temp => ohms => oscillator frequency
   converted to deg C and displayed via simple local webserver 
@@ -23,68 +25,90 @@
 
  */
 
+//#define DEBUGMODE // comment out this line if you dont want debugging via the serial port
+		    // Note that device will hang on startup until serial port is opened 
+
 #include <SPI.h>
 #include <WiFi101.h>
+#include <SD.h>
 
 #include "arduino_secrets.h" 	// sensitive data in the Secret tab/arduino_secrets.h
 #include "pizzatemp.h" 		// Helper files 
 
+ 
 char ssid[] = SECRET_SSID;      // your network SSID (name)
 char pass[] = SECRET_PASS;    	// your network password (use for WPA, or use as key for WEP)
 int keyIndex = 0;               // your network key Index number (needed only for WEP)
 
-Pizzatemp helper; //Need to declare an instance of class to use helpers 
+Pizzatemp helper; // declare an instance of the class to use helpers 
 
 
 // Wifi stuff
 int status = WL_IDLE_STATUS;
 WiFiServer server(80);
 
-//#include "pizzatemp.cpp" // Project specific routines
-
+// Arduino setup routine 
 void setup() {
-  //Initialize serial and wait for port to open:
+  // setup interrupt for freq counter  
+  helper.initialize_interrupt();
+
+#ifdef DEBUGMODE 
+    //Initialize serial and wait for port to open:
+
   Serial.begin(9600);
   while (!Serial) {
      // wait for serial port to connect. Needed for native USB port only
   }
-  
-     helper.initialize_interrupt();
+#endif  
      
   // check for the presence of the shield:
   if (WiFi.status() == WL_NO_SHIELD) {
-    Serial.println("WiFi shield not present");
     // don't continue:
     while (true);
+    
+#ifdef DEBUGMODE  
+    Serial.println("WiFi shield not present");
+#endif    
+
   }
 
   // attempt to connect to WiFi network:
   while (status != WL_CONNECTED) {
+#ifdef DEBUGMODE 
     Serial.print("Attempting to connect to SSID: ");
     Serial.println(ssid);
+#endif
     // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     status = WiFi.begin(ssid, pass);
 
-    // wait 10 seconds for connection:
-    delay(10000);// wait 1 second
+    delay(1000);// wait 1 second
   }
   server.begin();
+  
+#ifdef DEBUGMODE
   // you're connected now, so print out the status:
   helper.printWiFiStatus();
+#endif
 }
-// wait 1 second
 
+// Arduino main loop
 void loop() {
   // listen for incoming clients
   WiFiClient client = server.available();
   if (client) {
+#ifdef DEBUGMODE
     Serial.println("new client");
+#endif
     // an http request ends with a blank line
     boolean currentLineIsBlank = true;
     while (client.connected()) {
       if (client.available()) {
         char c = client.read();
-        Serial.write(c);
+	
+#ifdef DEBUGMODE
+	Serial.write(c);
+#endif
+	
         // if you've gotten to the end of the line (received a newline
         // character) and the line is blank, the http request has ended,
         // so you can send a reply
@@ -95,14 +119,17 @@ void loop() {
           client.println("Connection: close");  // the connection will be closed after completion of the response
           client.println("Refresh: 5");  // refresh the page automatically every 10 sec
           client.println();
+	  
           client.println("<!DOCTYPE HTML>");
           client.println("<html>");
 
 	  client.print("Current Oven temperature is : ");
 	  int sensorReading = helper.measure_temp();
 	  client.print(sensorReading);
+	  helper.table(client); // call table routine 
 	  client.println("<br />");
           client.println("</html>");
+	  
           break;
         }
         if (c == '\n') {
@@ -120,8 +147,11 @@ void loop() {
 
     // close the connection:
     client.stop();
-
+    
+#ifdef DEBUGMODE
     Serial.println("client disconnected");
+#endif
+    
   }
 }
 
