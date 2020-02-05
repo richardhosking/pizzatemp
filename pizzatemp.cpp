@@ -38,11 +38,11 @@ void Pizzatemp::printWiFiStatus() {
 
 // Set up counter interrupt 
 void Pizzatemp::initialize_interrupt(){
-  // Pin 0 interrupt priority 0 ie highest
-  pinMode(0,INPUT_PULLUP);
+  // Pin 4 interrupt priority 0 ie highest
+  pinMode(4,INPUT_PULLUP);
 
- attachInterrupt(0,increment_counter, RISING); 
- // Call Interrupt service routine to incerement_counter when rising waveform on pin 0
+ attachInterrupt(4,increment_counter, RISING); 
+ // Call Interrupt service routine to incerement_counter when rising waveform on pin 4 which is oscillator output
 }
 
 int Pizzatemp::measure_temp(){
@@ -91,54 +91,3 @@ return result;
 
 }
 
-// Displays a table of past temperatures 
-// over the ;last several hours 
-// via webserver
-// Uses HTML only
-// quotes limitations make for rather difficult to read code
-
-void Pizzatemp::table(WiFiClient client){
-  
-  int last_temp =660;//<%= last_temp %>
-  client.print("<table width=100% border=1 cellpadding=0 cellspacing=0>");
-  client.print("<tr>");
-  client.print("<td height='30' valign='bottom'><div align='left'>100</div></td><td width='0'rowspan='11' valign='bottom'><div align='center'>");
-  client.print("</tr>");
-  client.print("<td height='30' valign='bottom'><div align='right'>100</div></td><td width='0' rowspan='11' valign='bottom'><div align='center'>");
-  client.print("<table width='100%' border='0' cellpadding='0' cellspacing='0'><tr>");
-  client.print("<td width='50%' valign='bottom' ><table width='20' height=");
-  client.print(last_temp);
-  client.print("border='0' align='center' bordercolor='#FF0000' bgcolor='#CCCCFF'>");
-  client.print("<tr><td></td></tr></table></td></tr></table></div></td>");
-  /*client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");  
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");  
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");
-  client.print("Previous temperature data : ");*/
-  client.print("</tr>");
-  client.print("</table>");  
-
-
-
-
-  
-}

@@ -1,2 +1,7 @@
 Git workflow
 
+git add * // add all new files
+git commit - m "message describing changes"  // commit changes to local repo 
+git push origin master // push up to git - will ask for username richardhosking and password 
+
+

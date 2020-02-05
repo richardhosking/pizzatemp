@@ -10,13 +10,12 @@
     void printWiFiStatus(void);
     int measure_temp(void);
     void initialize_interrupt(void);
-    void table(WiFiClient);
     
   // Variables
   private:
-    float capacitor = 0.65; 	// capacitance in uF of the oscillator capacitor
+    float capacitor = 0.607; 	// capacitance in uF of the oscillator capacitor
     float cap = capacitor*1E-6;
-    int offset = 256; 		// Offset for temp calculation - can be trimmed 
+    int offset = 281; 		// Offset for temp calculation - can be trimmed 
     float multiplier = 0.205; 	// Coefficient based on resistance change 0.385 ohms/deg C 
     float temp;
     int count, result;

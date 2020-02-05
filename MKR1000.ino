@@ -1,5 +1,4 @@
 /*
-  
   Temperature monitoring application
   Richard Hosking Feb 2019
   richardh@iinet.net.au
@@ -25,7 +24,7 @@
 
  */
 
-//#define DEBUGMODE // comment out this line if you dont want debugging via the serial port
+#define DEBUGMODE // comment out this line if you dont want debugging via the serial port
 		    // Note that device will hang on startup until serial port is opened 
 
 #include <SPI.h>
@@ -126,8 +125,7 @@ void loop() {
 	  client.print("Current Oven temperature is : ");
 	  int sensorReading = helper.measure_temp();
 	  client.print(sensorReading);
-	  helper.table(client); // call table routine 
-	  client.println("<br />");
+ 	  client.println("<br />");
           client.println("</html>");
 	  
           break;
@@ -154,5 +152,3 @@ void loop() {
     
   }
 }
-
-
